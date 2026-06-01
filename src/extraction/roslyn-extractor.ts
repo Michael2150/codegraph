@@ -60,7 +60,7 @@ export class RoslynExtractor {
 
   constructor(
     private readonly filePath: string,
-    _source: string
+    private readonly source: string
   ) {
     this.language = path.extname(filePath).toLowerCase() === '.vb' ? 'vbnet' : 'csharp';
   }
@@ -70,8 +70,12 @@ export class RoslynExtractor {
     let raw: RoslynOutput;
 
     try {
-      const stdout = execFileSync(getRoslynBin(), ['--file', this.filePath], {
+      // Pass source via stdin so the binary does not need to locate the file
+      // on disk relative to its own working directory. The --file arg is kept
+      // for node IDs and qualified name generation inside the binary.
+      const stdout = execFileSync(getRoslynBin(), ['--file', this.filePath, '--stdin'], {
         encoding: 'utf8',
+        input: this.source,
         timeout: 30_000,
         maxBuffer: 50 * 1024 * 1024,
       });
