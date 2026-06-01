@@ -24,6 +24,7 @@ import { SvelteExtractor } from './svelte-extractor';
 import { DfmExtractor } from './dfm-extractor';
 import { VueExtractor } from './vue-extractor';
 import { MyBatisExtractor } from './mybatis-extractor';
+import { RoslynExtractor } from './roslyn-extractor';
 import {
   getAllFrameworkResolvers,
   getApplicableFrameworks,
@@ -3055,8 +3056,12 @@ export function extractFromSource(
 
   let result: ExtractionResult;
 
-  // Use custom extractor for Svelte
-  if (detectedLanguage === 'svelte') {
+  // Use Roslyn for VB.NET (tree-sitter has no VB grammar)
+  if (detectedLanguage === 'vbnet') {
+    const extractor = new RoslynExtractor(filePath, source);
+    result = extractor.extract();
+  } else if (detectedLanguage === 'svelte') {
+    // Use custom extractor for Svelte
     const extractor = new SvelteExtractor(filePath, source);
     result = extractor.extract();
   } else if (detectedLanguage === 'vue') {

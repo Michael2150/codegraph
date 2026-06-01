@@ -9,6 +9,7 @@
   },
   "files": [
     "dist",
+    "bin",
     "scripts",
     "README.md"
   ],

@@ -11,6 +11,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### New Features
 
+- VB.NET is now fully supported — indexing a `.vb` file extracts classes, modules, interfaces, methods, properties, fields, enums, and imports, along with call, inheritance, and event-handler edges. Extraction is powered by a bundled Roslyn-based backend (`codegraph-roslyn`) that runs alongside the existing tree-sitter extractors.
 - `codegraph init` now builds the initial index by default — you no longer need the `-i`/`--index` flag (it's still accepted, so existing commands and scripts keep working). (#483)
 - Go: Gin middleware chains now connect end-to-end in `codegraph_trace` and `codegraph_explore` — following a request reaches the middleware and route handlers registered via `.Use()` / `.GET()` instead of dead-ending where the framework dispatches the chain dynamically.
 

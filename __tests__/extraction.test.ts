@@ -4387,3 +4387,19 @@ void helperFunction(int count) {
     expect(getSupportedLanguages()).toContain('objc');
   });
 });
+
+describe('VB.NET language registration', () => {
+  it('should detect .vb files as vbnet', () => {
+    expect(detectLanguage('Form1.vb')).toBe('vbnet');
+    expect(detectLanguage('Module1.vb')).toBe('vbnet');
+    expect(detectLanguage('C:/src/MyProject/FrmMain.vb')).toBe('vbnet');
+  });
+
+  it('should report vbnet as supported', () => {
+    expect(isLanguageSupported('vbnet')).toBe(true);
+  });
+
+  it('should include vbnet in getSupportedLanguages()', () => {
+    expect(getSupportedLanguages()).toContain('vbnet');
+  });
+});
