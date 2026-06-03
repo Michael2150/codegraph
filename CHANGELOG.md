@@ -9,6 +9,10 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### New Features
+
+- VB.NET support is now powered by a proper tree-sitter grammar instead of the Roslyn backend, removing the external binary dependency. CodeGraph indexes `.vb` files natively — extracting classes, modules, interfaces, enums, methods (including constructors), properties, constants, and call edges entirely through the bundled WASM parser.
+
 ## [0.9.8] - 2026-06-01
 
 ### New Features
