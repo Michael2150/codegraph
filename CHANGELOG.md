@@ -9,12 +9,11 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-
 ## [0.9.8] - 2026-06-01
 
 ### New Features
 
-- VB.NET is now fully supported — indexing a `.vb` file extracts classes, modules, interfaces, methods, properties, fields, enums, and imports, along with call, inheritance, and event-handler edges. Extraction is powered by a bundled Roslyn-based backend (`codegraph-roslyn`) that runs alongside the existing tree-sitter extractors.
+- VB.NET is now fully supported — CodeGraph indexes `.vb` files natively using the bundled tree-sitter grammar, extracting classes, modules, interfaces, methods (including constructors), properties, fields, constants, enums, and imports, along with call, inheritance, and event-handler edges.
 - `codegraph init` now builds the initial index by default — you no longer need the `-i`/`--index` flag (it's still accepted, so existing commands and scripts keep working). (#483)
 - Go: Gin middleware chains now connect end-to-end in `codegraph_trace` and `codegraph_explore` — following a request reaches the middleware and route handlers registered via `.Use()` / `.GET()` instead of dead-ending where the framework dispatches the chain dynamically.
 - `codegraph_explore` now sizes its response to the *answer* instead of the file count: it shows the mechanism and the exact methods you asked about in full — even when they're buried deep in a large file — while collapsing the redundant interchangeable implementations of an interface (an HTTP interceptor chain, a query-compiler family) down to signatures. Fewer tokens for a more complete answer, so on the flows that used to occasionally cost more than plain grep/read it's now clearly cheaper — and the win holds across small, medium, and large codebases. Distinct, non-interchangeable code is shown in full as before. Disable with `CODEGRAPH_ADAPTIVE_EXPLORE=0`.

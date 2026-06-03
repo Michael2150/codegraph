@@ -4403,3 +4403,214 @@ describe('VB.NET language registration', () => {
     expect(getSupportedLanguages()).toContain('vbnet');
   });
 });
+
+describe('VB.NET Extraction', () => {
+  describe('Class and module extraction', () => {
+    it('should extract classes and modules', () => {
+      const code = `
+Public Class Animal
+    Public Property Name As String
+    Public Function Speak() As String
+        Return "..."
+    End Function
+End Class
+
+Module MathHelper
+    Public Function Add(a As Integer, b As Integer) As Integer
+        Return a + b
+    End Function
+End Module
+`;
+      const result = extractFromSource('Animals.vb', code);
+      const classes = result.nodes.filter((n) => n.kind === 'class').map((n) => n.name);
+      expect(classes).toContain('Animal');
+      expect(classes).toContain('MathHelper');
+      const animal = result.nodes.find((n) => n.name === 'Animal' && n.kind === 'class');
+      expect(animal?.language).toBe('vbnet');
+      expect(animal?.visibility).toBe('public');
+    });
+
+    it('should extract interface declarations', () => {
+      const code = `
+Public Interface IShape
+    Function Area() As Double
+    Property Name As String
+End Interface
+`;
+      const result = extractFromSource('IShape.vb', code);
+      const iface = result.nodes.find((n) => n.kind === 'interface' && n.name === 'IShape');
+      expect(iface).toBeDefined();
+      expect(iface?.isExported).toBe(true);
+    });
+
+    it('should not extract Inherits/Implements as fields', () => {
+      const code = `
+Public Class Dog
+    Inherits Animal
+    Implements IAnimal
+
+    Public Sub Bark()
+    End Sub
+End Class
+`;
+      const result = extractFromSource('Dog.vb', code);
+      const fieldNames = result.nodes.filter((n) => n.kind === 'field').map((n) => n.name);
+      expect(fieldNames).not.toContain('Inherits');
+      expect(fieldNames).not.toContain('Implements');
+      expect(fieldNames).not.toContain('Animal');
+      expect(fieldNames).not.toContain('IAnimal');
+    });
+  });
+
+  describe('Method extraction', () => {
+    it('should extract Sub and Function methods', () => {
+      const code = `
+Public Class Greeter
+    Public Sub SayHello(name As String)
+        Console.WriteLine("Hello " & name)
+    End Sub
+
+    Public Function GetGreeting() As String
+        Return "Hello"
+    End Function
+End Class
+`;
+      const result = extractFromSource('Greeter.vb', code);
+      const methods = result.nodes.filter((n) => n.kind === 'method').map((n) => n.name);
+      expect(methods).toContain('SayHello');
+      expect(methods).toContain('GetGreeting');
+    });
+
+    it('should extract constructors (Sub New)', () => {
+      const code = `
+Public Class Point
+    Public Sub New(x As Integer, y As Integer)
+        Me.X = x
+        Me.Y = y
+    End Sub
+    Public Property X As Integer
+    Public Property Y As Integer
+End Class
+`;
+      const result = extractFromSource('Point.vb', code);
+      const methods = result.nodes.filter((n) => n.kind === 'method').map((n) => n.name);
+      expect(methods).toContain('New');
+    });
+
+    it('should mark Shared methods as static', () => {
+      const code = `
+Module Utils
+    Public Shared Function Max(a As Integer, b As Integer) As Integer
+        Return If(a > b, a, b)
+    End Function
+End Module
+`;
+      const result = extractFromSource('Utils.vb', code);
+      const max = result.nodes.find((n) => n.name === 'Max' && n.kind === 'method');
+      expect(max?.isStatic).toBe(true);
+    });
+  });
+
+  describe('Enum extraction', () => {
+    it('should extract enums and their members', () => {
+      const code = `
+Public Enum Color
+    Red
+    Green
+    Blue
+End Enum
+`;
+      const result = extractFromSource('Color.vb', code);
+      const enm = result.nodes.find((n) => n.kind === 'enum' && n.name === 'Color');
+      expect(enm).toBeDefined();
+      const members = result.nodes.filter((n) => n.kind === 'enum_member').map((n) => n.name);
+      expect(members).toContain('Red');
+      expect(members).toContain('Green');
+      expect(members).toContain('Blue');
+    });
+  });
+
+  describe('Namespace and import extraction', () => {
+    it('should extract namespace blocks', () => {
+      const code = `
+Namespace MyApp.Services
+    Public Class UserService
+        Public Sub Create()
+        End Sub
+    End Class
+End Namespace
+`;
+      const result = extractFromSource('UserService.vb', code);
+      const ns = result.nodes.find((n) => n.kind === 'namespace');
+      expect(ns).toBeDefined();
+      const svc = result.nodes.find((n) => n.name === 'UserService' && n.kind === 'class');
+      expect(svc?.qualifiedName).toContain('UserService');
+    });
+
+    it('should extract Imports statements', () => {
+      const code = `
+Imports System
+Imports System.Collections.Generic
+Imports System.IO
+
+Module Program
+    Sub Main()
+    End Sub
+End Module
+`;
+      const result = extractFromSource('Program.vb', code);
+      const imports = result.nodes.filter((n) => n.kind === 'import').map((n) => n.name);
+      expect(imports).toContain('System');
+      expect(imports).toContain('System.Collections.Generic');
+      expect(imports).toContain('System.IO');
+    });
+  });
+
+  describe('Property and constant extraction', () => {
+    it('should extract properties', () => {
+      const code = `
+Public Class Person
+    Public Property FirstName As String
+    Public Property LastName As String
+    Private Property Age As Integer
+End Class
+`;
+      const result = extractFromSource('Person.vb', code);
+      const props = result.nodes.filter((n) => n.kind === 'property').map((n) => n.name);
+      expect(props).toContain('FirstName');
+      expect(props).toContain('LastName');
+      expect(props).toContain('Age');
+    });
+
+    it('should extract constants', () => {
+      const code = `
+Module Constants
+    Public Const PI As Double = 3.14159
+    Public Const MaxRetries As Integer = 3
+End Module
+`;
+      const result = extractFromSource('Constants.vb', code);
+      const consts = result.nodes.filter((n) => n.kind === 'constant').map((n) => n.name);
+      expect(consts).toContain('PI');
+      expect(consts).toContain('MaxRetries');
+    });
+  });
+
+  describe('Call extraction', () => {
+    it('should extract method call edges', () => {
+      const code = `
+Module App
+    Sub Run()
+        Dim result = Calculate(10, 20)
+        Console.WriteLine(result)
+    End Sub
+    Function Calculate(a As Integer, b As Integer) As Integer
+        Return a + b
+    End Function
+End Module
+`;
+      const result = extractFromSource('App.vb', code);
+      expect(result.unresolvedReferences.some((r) => r.referenceKind === 'calls')).toBe(true);
+    });
+  });
+});

@@ -10,7 +10,7 @@ import * as path from 'path';
 import { Parser, Language as WasmLanguage } from 'web-tree-sitter';
 import { Language } from '../types';
 
-export type GrammarLanguage = Exclude<Language, 'svelte' | 'vue' | 'liquid' | 'yaml' | 'twig' | 'xml' | 'properties' | 'vbnet' | 'unknown'>;
+export type GrammarLanguage = Exclude<Language, 'svelte' | 'vue' | 'liquid' | 'yaml' | 'twig' | 'xml' | 'properties' | 'unknown'>;
 
 /**
  * WASM filename map — maps each language to its .wasm grammar file
@@ -38,6 +38,7 @@ const WASM_GRAMMAR_FILES: Record<GrammarLanguage, string> = {
   lua: 'tree-sitter-lua.wasm',
   luau: 'tree-sitter-luau.wasm',
   objc: 'tree-sitter-objc.wasm',
+  vbnet: 'tree-sitter-vbnet.wasm',
 };
 
 /**
@@ -180,7 +181,7 @@ export async function loadGrammarsForLanguages(languages: Language[]): Promise<v
       // ABI-13 build that corrupts the shared WASM heap under web-tree-sitter
       // 0.25 (drops nested calls/imports on every file after the first); we
       // vendor the upstream ABI-15 wasm instead.
-      const wasmPath = (lang === 'pascal' || lang === 'scala' || lang === 'lua' || lang === 'luau')
+      const wasmPath = (lang === 'pascal' || lang === 'scala' || lang === 'lua' || lang === 'luau' || lang === 'vbnet')
         ? path.join(__dirname, 'wasm', wasmFile)
         : require.resolve(`tree-sitter-wasms/out/${wasmFile}`);
       const language = await WasmLanguage.load(wasmPath);
@@ -277,7 +278,6 @@ export function isLanguageSupported(language: Language): boolean {
   if (language === 'twig') return true; // file-level tracking only
   if (language === 'xml') return true; // MyBatis mapper extractor
   if (language === 'properties') return true; // Spring config keys
-  if (language === 'vbnet') return true; // Roslyn extractor (no WASM grammar)
   if (language === 'unknown') return false;
   return language in WASM_GRAMMAR_FILES;
 }
@@ -289,7 +289,6 @@ export function isGrammarLoaded(language: Language): boolean {
   if (language === 'svelte' || language === 'vue' || language === 'liquid') return true;
   if (language === 'yaml' || language === 'twig') return true; // no WASM grammar needed
   if (language === 'xml' || language === 'properties') return true; // no WASM grammar needed
-  if (language === 'vbnet') return true; // Roslyn extractor; no WASM grammar needed
   return languageCache.has(language);
 }
 
@@ -310,7 +309,7 @@ export function isFileLevelOnlyLanguage(language: Language): boolean {
  * Get all supported languages (those with grammar definitions).
  */
 export function getSupportedLanguages(): Language[] {
-  return [...(Object.keys(WASM_GRAMMAR_FILES) as GrammarLanguage[]), 'svelte', 'vue', 'liquid', 'vbnet'];
+  return [...(Object.keys(WASM_GRAMMAR_FILES) as GrammarLanguage[]), 'svelte', 'vue', 'liquid'];
 }
 
 /**
